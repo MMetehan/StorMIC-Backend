@@ -49,11 +49,17 @@ wss.on('connection', (ws) => {
           return;
         }
 
-        ws.channelCode = code;
-        ws.username = username;
-
         if (!channels.has(code)) channels.set(code, new Set());
         const members = channels.get(code);
+
+        const nameTaken = [...members].some(m => m.username === username);
+        if (nameTaken) {
+          ws.send(JSON.stringify({ type: 'error', code: 'USERNAME_TAKEN' }));
+          return;
+        }
+
+        ws.channelCode = code;
+        ws.username = username;
 
         const peers = [];
         for (const m of members) peers.push({ username: m.username });
