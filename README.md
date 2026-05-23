@@ -1,6 +1,8 @@
 # StorMIC Signaling Server
 
 > **[English](#english) | [Türkçe](#türkçe)**
+>
+> ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 ---
 
@@ -205,6 +207,12 @@ See [`client/README.md`](../client/README.md) for the full build and `.env` setu
 | `ws` | ^8.18 | WebSocket server |
 
 No database, no authentication, no external services.
+
+---
+
+### License
+
+[MIT](LICENSE) © 2026 StorMIC
 
 ---
 
@@ -413,3 +421,9 @@ Tam build ve `.env` kurulum kılavuzu için [`client/README.md`](../client/READM
 | `ws` | ^8.18 | WebSocket sunucusu |
 
 Veritabanı yok, kimlik doğrulama yok, harici servis yok.
+
+---
+
+### Lisans
+
+[MIT](LICENSE) © 2026 StorMIC
