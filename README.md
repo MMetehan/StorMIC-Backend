@@ -17,7 +17,7 @@ This is the WebSocket signaling server for StorMIC. Its only job is to help two 
 **No message storage. No user accounts. No persistence of any kind.**  
 All state is in-memory. When the last member leaves a channel, the channel is deleted.
 
-The client is configured to connect to your own instance of this server. See [`client/README.md`](../client/README.md) for how to bake the URL into the client build via `.env`.
+The client is configured to connect to your own instance of this server. See [`StorMIC/README.md`](https://github.com/MMetehan/StorMIC/blob/main/README.md) for how to bake the URL into the client build via `.env`.
 
 ---
 
@@ -26,7 +26,7 @@ The client is configured to connect to your own instance of this server. See [`c
 ```
 Client A ──ws──► Server ──ws──► Client B
          join/signal relay only
-         
+
 Once WebRTC is established:
 Client A ◄──────── WebRTC P2P ────────► Client B
          (audio, video, chat, files)
@@ -46,27 +46,27 @@ All messages are JSON.
 
 #### Client → Server
 
-| Message | Fields | Description |
-|---|---|---|
-| `join` | `code`, `username`, `intent` | Join or create a channel. `intent` is `"create"` or `"join"` |
-| `signal` | `to`, `data` | Relay a signal (offer, answer, or ICE candidate) to a specific peer |
+| Message  | Fields                       | Description                                                         |
+| -------- | ---------------------------- | ------------------------------------------------------------------- |
+| `join`   | `code`, `username`, `intent` | Join or create a channel. `intent` is `"create"` or `"join"`        |
+| `signal` | `to`, `data`                 | Relay a signal (offer, answer, or ICE candidate) to a specific peer |
 
 #### Server → Client
 
-| Message | Fields | Description |
-|---|---|---|
-| `peers` | `peers[]` | List of existing members on join (array of `{ username }`) |
-| `peer-joined` | `username` | A new peer joined the channel |
-| `peer-left` | `username` | A peer disconnected |
-| `signal` | `from`, `data` | A relayed signal from another peer |
-| `error` | `code` | Error condition (see below) |
+| Message       | Fields         | Description                                                |
+| ------------- | -------------- | ---------------------------------------------------------- |
+| `peers`       | `peers[]`      | List of existing members on join (array of `{ username }`) |
+| `peer-joined` | `username`     | A new peer joined the channel                              |
+| `peer-left`   | `username`     | A peer disconnected                                        |
+| `signal`      | `from`, `data` | A relayed signal from another peer                         |
+| `error`       | `code`         | Error condition (see below)                                |
 
 #### Error Codes
 
-| Code | Meaning |
-|---|---|
-| `CHANNEL_NOT_FOUND` | `intent: "join"` but the channel does not exist |
-| `USERNAME_TAKEN` | The requested username is already in use in this channel |
+| Code                | Meaning                                                  |
+| ------------------- | -------------------------------------------------------- |
+| `CHANNEL_NOT_FOUND` | `intent: "join"` but the channel does not exist          |
+| `USERNAME_TAKEN`    | The requested username is already in use in this channel |
 
 ---
 
@@ -94,9 +94,9 @@ PORT=8080 npm start
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3000` | TCP port to listen on |
+| Variable | Default | Description           |
+| -------- | ------- | --------------------- |
+| `PORT`   | `3000`  | TCP port to listen on |
 
 ---
 
@@ -113,6 +113,7 @@ A `render.yaml` is included for automatic deployment:
 5. Copy the `.onrender.com` URL Render assigns to your service
 
 Then set it as your signal URL in `client/.env`:
+
 ```
 STORMIC_SIGNAL_URL=wss://your-service-name.onrender.com
 ```
@@ -130,6 +131,7 @@ git subtree push --prefix server heroku main
 ```
 
 Then set your signal URL in `client/.env`:
+
 ```
 STORMIC_SIGNAL_URL=wss://your-app-name.herokuapp.com
 ```
@@ -147,6 +149,7 @@ PORT=443 node index.js   # or use a process manager like PM2
 Using a reverse proxy (nginx/Caddy) with a TLS certificate is strongly recommended so the URL is `wss://` rather than `ws://`. Browsers and Electron apps in production will refuse mixed-content WebSocket connections over plain `ws://` when the app was built expecting secure connections.
 
 **Example nginx config:**
+
 ```nginx
 server {
     listen 443 ssl;
@@ -166,6 +169,7 @@ server {
 ```
 
 Then set your signal URL in `client/.env`:
+
 ```
 STORMIC_SIGNAL_URL=wss://signal.yourdomain.com
 ```
@@ -196,15 +200,15 @@ cd ..          # project root
 make win       # or make mac / make linux
 ```
 
-See [`client/README.md`](../client/README.md) for the full build and `.env` setup guide.
+See [`StorMIC/README.md`](https://github.com/MMetehan/StorMIC/blob/main/README.md) for the full build and `.env` setup guide.
 
 ---
 
 ### Dependencies
 
-| Package | Version | Purpose |
-|---|---|---|
-| `ws` | ^8.18 | WebSocket server |
+| Package | Version | Purpose          |
+| ------- | ------- | ---------------- |
+| `ws`    | ^8.18   | WebSocket server |
 
 No database, no authentication, no external services.
 
@@ -232,7 +236,7 @@ Bu, StorMIC'in WebSocket sinyal sunucusudur. Tek görevi, iki kullanıcının bi
 **Mesaj depolama yok. Kullanıcı hesabı yok. Hiçbir kalıcı veri tutulmaz.**  
 Tüm durum bellekte tutulur. Kanaldan son üye ayrıldığında kanal silinir.
 
-İstemci, bu sunucunun kendi kurulumuna bağlanacak şekilde yapılandırılır. URL'yi istemci binary'sine `.env` aracılığıyla nasıl gömeceğini öğrenmek için [`client/README.md`](../client/README.md) dosyasına bak.
+İstemci, bu sunucunun kendi kurulumuna bağlanacak şekilde yapılandırılır. URL'yi istemci binary'sine `.env` aracılığıyla nasıl gömeceğini öğrenmek için [`StorMIC/README.md`](https://github.com/MMetehan/StorMIC/blob/main/README.md) dosyasına bak.
 
 ---
 
@@ -241,7 +245,7 @@ Tüm durum bellekte tutulur. Kanaldan son üye ayrıldığında kanal silinir.
 ```
 İstemci A ──ws──► Sunucu ──ws──► İstemci B
            yalnızca join/signal aktarımı
-         
+
 WebRTC bağlantısı kurulduktan sonra:
 İstemci A ◄────── WebRTC P2P ──────► İstemci B
           (ses, video, sohbet, dosyalar)
@@ -261,27 +265,27 @@ Tüm mesajlar JSON formatındadır.
 
 #### İstemci → Sunucu
 
-| Mesaj | Alanlar | Açıklama |
-|---|---|---|
-| `join` | `code`, `username`, `intent` | Kanala katıl veya oluştur. `intent`: `"create"` veya `"join"` |
-| `signal` | `to`, `data` | Belirli bir kullanıcıya sinyal (teklif, yanıt veya ICE adayı) ilet |
+| Mesaj    | Alanlar                      | Açıklama                                                           |
+| -------- | ---------------------------- | ------------------------------------------------------------------ |
+| `join`   | `code`, `username`, `intent` | Kanala katıl veya oluştur. `intent`: `"create"` veya `"join"`      |
+| `signal` | `to`, `data`                 | Belirli bir kullanıcıya sinyal (teklif, yanıt veya ICE adayı) ilet |
 
 #### Sunucu → İstemci
 
-| Mesaj | Alanlar | Açıklama |
-|---|---|---|
-| `peers` | `peers[]` | Kanala katılınca mevcut üyelerin listesi (`{ username }` dizisi) |
-| `peer-joined` | `username` | Yeni bir kullanıcı kanala katıldı |
-| `peer-left` | `username` | Bir kullanıcı bağlantısını kesti |
-| `signal` | `from`, `data` | Başka bir kullanıcıdan iletilen sinyal |
-| `error` | `code` | Hata durumu (aşağıya bakın) |
+| Mesaj         | Alanlar        | Açıklama                                                         |
+| ------------- | -------------- | ---------------------------------------------------------------- |
+| `peers`       | `peers[]`      | Kanala katılınca mevcut üyelerin listesi (`{ username }` dizisi) |
+| `peer-joined` | `username`     | Yeni bir kullanıcı kanala katıldı                                |
+| `peer-left`   | `username`     | Bir kullanıcı bağlantısını kesti                                 |
+| `signal`      | `from`, `data` | Başka bir kullanıcıdan iletilen sinyal                           |
+| `error`       | `code`         | Hata durumu (aşağıya bakın)                                      |
 
 #### Hata Kodları
 
-| Kod | Anlam |
-|---|---|
-| `CHANNEL_NOT_FOUND` | `intent: "join"` ama kanal mevcut değil |
-| `USERNAME_TAKEN` | İstenen kullanıcı adı bu kanalda zaten kullanımda |
+| Kod                 | Anlam                                             |
+| ------------------- | ------------------------------------------------- |
+| `CHANNEL_NOT_FOUND` | `intent: "join"` ama kanal mevcut değil           |
+| `USERNAME_TAKEN`    | İstenen kullanıcı adı bu kanalda zaten kullanımda |
 
 ---
 
@@ -309,9 +313,9 @@ PORT=8080 npm start
 
 ### Ortam Değişkenleri
 
-| Değişken | Varsayılan | Açıklama |
-|---|---|---|
-| `PORT` | `3000` | Dinlenecek TCP portu |
+| Değişken | Varsayılan | Açıklama             |
+| -------- | ---------- | -------------------- |
+| `PORT`   | `3000`     | Dinlenecek TCP portu |
 
 ---
 
@@ -328,6 +332,7 @@ Otomatik deployment için `render.yaml` dahildir:
 5. Render'ın servisine atadığı `.onrender.com` URL'sini kopyala
 
 Ardından `client/.env` dosyasına ekle:
+
 ```
 STORMIC_SIGNAL_URL=wss://servis-adin.onrender.com
 ```
@@ -344,6 +349,7 @@ git subtree push --prefix server heroku main
 ```
 
 Ardından `client/.env` dosyasına ekle:
+
 ```
 STORMIC_SIGNAL_URL=wss://uygulama-adin.herokuapp.com
 ```
@@ -361,6 +367,7 @@ PORT=443 node index.js   # veya PM2 gibi bir process manager kullan
 TLS sertifikasıyla bir reverse proxy (nginx/Caddy) kullanmak şiddetle tavsiye edilir; böylece URL `ws://` yerine `wss://` olur. Üretim ortamındaki tarayıcılar ve Electron uygulamaları, güvenli bağlantı beklentisiyle oluşturulmuş olduklarında düz `ws://` üzerinden karma içerikli WebSocket bağlantılarını reddeder.
 
 **Örnek nginx yapılandırması:**
+
 ```nginx
 server {
     listen 443 ssl;
@@ -380,6 +387,7 @@ server {
 ```
 
 Ardından `client/.env` dosyasına ekle:
+
 ```
 STORMIC_SIGNAL_URL=wss://signal.alanadiniz.com
 ```
@@ -410,15 +418,15 @@ cd ..          # proje kökü
 make win       # veya make mac / make linux
 ```
 
-Tam build ve `.env` kurulum kılavuzu için [`client/README.md`](../client/README.md) dosyasına bak.
+Tam build ve `.env` kurulum kılavuzu için [`StorMIC/README.md`](https://github.com/MMetehan/StorMIC/blob/main/README.md) dosyasına bak.
 
 ---
 
 ### Bağımlılıklar
 
-| Paket | Sürüm | Amaç |
-|---|---|---|
-| `ws` | ^8.18 | WebSocket sunucusu |
+| Paket | Sürüm | Amaç               |
+| ----- | ----- | ------------------ |
+| `ws`  | ^8.18 | WebSocket sunucusu |
 
 Veritabanı yok, kimlik doğrulama yok, harici servis yok.
 
