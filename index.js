@@ -1,15 +1,55 @@
 const http = require('http');
 const { WebSocketServer } = require('ws');
 
-const PORT = process.env.PORT || 3000;
+const PORT              = process.env.PORT || 3000;
+const MAX_CHANNEL_PEERS = Number(process.env.MAX_CHANNEL_PEERS) || 16;
 
-// HTTP sunucusu — Render health check + uyku önleme pingleri için
+// ── ICE sunucu yapılandırması (env override destekli) ──────────
+const ICE_SERVERS = (() => {
+  const list = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+  ];
+  const turnUrl  = process.env.TURN_URL;
+  const turnUser = process.env.TURN_USERNAME;
+  const turnCred = process.env.TURN_CREDENTIAL;
+  if (turnUrl && turnUser && turnCred) {
+    list.push({ urls: turnUrl.split(','), username: turnUser, credential: turnCred });
+  } else {
+    // Açık röle — üretim ortamında kendi TURN sunucunuzu kullanın
+    list.push({
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turns:openrelay.metered.ca:443',
+      ],
+      username:   'openrelayproject',
+      credential: 'openrelayproject',
+    });
+  }
+  return list;
+})();
+
+// ── HTTP sunucusu ─────────────────────────────────────────────
 const httpServer = http.createServer((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   if (req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('ok');
+    const totalPeers = [...channels.values()].reduce((s, m) => s + m.size, 0);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', channels: channels.size, peers: totalPeers }));
     return;
   }
+
+  if (req.url === '/config') {
+    // İstemciler bağlantı kurmadan önce bu endpoint'i çekerek ICE yapılandırmasını alır.
+    // TURN kimlik bilgileri sunucu üzerinden yönetildiğinden istemciyi yeniden derlemek gerekmez.
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ iceServers: ICE_SERVERS }));
+    return;
+  }
+
   res.writeHead(404);
   res.end();
 });
@@ -18,6 +58,9 @@ const wss = new WebSocketServer({ server: httpServer });
 
 // channelCode -> Set<ws>
 const channels = new Map();
+
+// Boş kanallar için silinme zamanlayıcıları (30 saniyelik tolerans)
+const channelCleanupTimers = new Map();
 
 function broadcast(channel, message, exclude = null) {
   const members = channels.get(channel);
@@ -30,9 +73,28 @@ function broadcast(channel, message, exclude = null) {
   }
 }
 
+// ── Heartbeat: her 10 saniyede ping → yanıt gelmezse bağlantı kapat ──────────
+const PING_INTERVAL = 10_000;
+
+const heartbeat = setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (!ws.isAlive) {
+      ws.terminate();
+      return;
+    }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, PING_INTERVAL);
+
+wss.on('close', () => clearInterval(heartbeat));
+
 wss.on('connection', (ws) => {
   ws.channelCode = null;
-  ws.username = null;
+  ws.username    = null;
+  ws.isAlive     = true;
+
+  ws.on('pong', () => { ws.isAlive = true; });
 
   ws.on('message', (raw) => {
     let msg;
@@ -43,6 +105,22 @@ wss.on('connection', (ws) => {
         const { code, username, intent } = msg;
         if (!code || !username) return;
 
+        // Zaten başka bir kanaldaysa önce oradan çıkar (yeniden bağlanma race'i)
+        if (ws.channelCode && ws.channelCode !== code) {
+          const oldMembers = channels.get(ws.channelCode);
+          if (oldMembers) {
+            oldMembers.delete(ws);
+            console.log(`[${ws.channelCode}] ${ws.username} moved to another channel (${oldMembers.size} remaining)`);
+            if (oldMembers.size === 0) {
+              channels.delete(ws.channelCode);
+            } else {
+              broadcast(ws.channelCode, { type: 'peer-left', username: ws.username });
+            }
+          }
+          ws.channelCode = null;
+          ws.username    = null;
+        }
+
         // 'join' niyetinde kanal yoksa hata döndür
         if (intent === 'join' && !channels.has(code)) {
           ws.send(JSON.stringify({ type: 'error', code: 'CHANNEL_NOT_FOUND' }));
@@ -52,10 +130,26 @@ wss.on('connection', (ws) => {
         if (!channels.has(code)) channels.set(code, new Set());
         const members = channels.get(code);
 
-        const nameTaken = [...members].some(m => m.username === username);
-        if (nameTaken) {
-          ws.send(JSON.stringify({ type: 'error', code: 'USERNAME_TAKEN' }));
+        // Kanal kapasitesi kontrolü
+        if (members.size >= MAX_CHANNEL_PEERS) {
+          ws.send(JSON.stringify({ type: 'error', code: 'CHANNEL_FULL' }));
           return;
+        }
+
+        // Bu kanal için bekleyen temizleme zamanlayıcısını iptal et
+        if (channelCleanupTimers.has(code)) {
+          clearTimeout(channelCleanupTimers.get(code));
+          channelCleanupTimers.delete(code);
+        }
+
+        // Aynı kullanıcı adı kontrolü: ölü bağlantıysa temizle, canlıysa hata ver
+        const stale = [...members].find(m => m.username === username);
+        if (stale) {
+          if (stale.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'error', code: 'USERNAME_TAKEN' }));
+            return;
+          }
+          members.delete(stale);
         }
 
         ws.channelCode = code;
@@ -67,7 +161,7 @@ wss.on('connection', (ws) => {
 
         members.add(ws);
         broadcast(code, { type: 'peer-joined', username }, ws);
-        console.log(`[${code}] ${username} joined (${members.size} in channel)`);
+        console.log(`[${code}] ${username} joined (${members.size}/${MAX_CHANNEL_PEERS})`);
         break;
       }
 
@@ -97,8 +191,14 @@ wss.on('connection', (ws) => {
     console.log(`[${channelCode}] ${username} left (${members.size} remaining)`);
 
     if (members.size === 0) {
-      channels.delete(channelCode);
-      console.log(`[${channelCode}] Channel destroyed`);
+      const t = setTimeout(() => {
+        if (channels.get(channelCode)?.size === 0) {
+          channels.delete(channelCode);
+          console.log(`[${channelCode}] Channel destroyed (empty)`);
+        }
+        channelCleanupTimers.delete(channelCode);
+      }, 30_000);
+      channelCleanupTimers.set(channelCode, t);
     } else {
       broadcast(channelCode, { type: 'peer-left', username });
     }
