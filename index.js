@@ -36,7 +36,6 @@ const httpServer = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   if (req.url === '/health') {
-    const totalPeers = [...channels.values()].reduce((s, m) => s + m.size, 0);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', channels: channels.size, peers: totalPeers }));
     return;
@@ -58,6 +57,7 @@ const wss = new WebSocketServer({ server: httpServer });
 
 // channelCode -> Set<ws>
 const channels = new Map();
+let totalPeers = 0; // /health için ayrı sayaç tutulur, Map iterate etmek yerine
 
 // Boş kanallar için silinme zamanlayıcıları (30 saniyelik tolerans)
 const channelCleanupTimers = new Map();
@@ -160,6 +160,7 @@ wss.on('connection', (ws) => {
         ws.send(JSON.stringify({ type: 'peers', peers }));
 
         members.add(ws);
+        totalPeers++;
         broadcast(code, { type: 'peer-joined', username }, ws);
         console.log(`[${code}] ${username} joined (${members.size}/${MAX_CHANNEL_PEERS})`);
         break;
@@ -188,6 +189,7 @@ wss.on('connection', (ws) => {
     if (!members) return;
 
     members.delete(ws);
+    totalPeers = Math.max(0, totalPeers - 1);
     console.log(`[${channelCode}] ${username} left (${members.size} remaining)`);
 
     if (members.size === 0) {
@@ -215,6 +217,7 @@ function gracefulShutdown(signal) {
   channelCleanupTimers.forEach(t => clearTimeout(t));
   channelCleanupTimers.clear();
   clearInterval(heartbeat);
+  wss.clients.forEach(ws => ws.close(1001, 'Server shutting down'));
   wss.close(() => {
     httpServer.close(() => {
       console.log('Server closed.');
