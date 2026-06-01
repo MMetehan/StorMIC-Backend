@@ -208,3 +208,21 @@ wss.on('connection', (ws) => {
 httpServer.listen(PORT, () => {
   console.log(`StorMIC signaling server running on port ${PORT}`);
 });
+
+// ── Graceful shutdown (BUG-10) ────────────────────────────────
+function gracefulShutdown(signal) {
+  console.log(`\n[${signal}] Shutting down gracefully...`);
+  channelCleanupTimers.forEach(t => clearTimeout(t));
+  channelCleanupTimers.clear();
+  clearInterval(heartbeat);
+  wss.close(() => {
+    httpServer.close(() => {
+      console.log('Server closed.');
+      process.exit(0);
+    });
+  });
+  // Force exit if graceful shutdown hangs
+  setTimeout(() => process.exit(1), 5000);
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
