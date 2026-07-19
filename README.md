@@ -12,7 +12,7 @@
 
 ### Overview
 
-This is the WebSocket signaling server for StorMIC. Its only job is to help two peers find each other and exchange the connection metadata (SDP offers/answers and ICE candidates) needed to establish a direct WebRTC connection. Once peers are connected, this server is completely out of the loop — no audio, video, chat, or files pass through it.
+This is the WebSocket signaling server for StorMIC. Its only job is to help two peers find each other and exchange the connection metadata (SDP offers/answers and ICE candidates) needed to establish a direct WebRTC connection. Once peers are connected, this server is completely out of the loop: no audio, video, chat, or files pass through it.
 
 **No message storage. No user accounts. No persistence of any kind.**  
 All state is in-memory. When the last member leaves a channel, the channel is deleted.
@@ -102,14 +102,14 @@ PORT=8080 npm start
 
 ### Deploying Your Own Server
 
-#### Option 1 — Render.com (recommended, free tier available)
+#### Option 1: Render.com (recommended, free tier available)
 
 A `render.yaml` is included for automatic deployment:
 
 1. Fork or push this repository to GitHub
 2. Go to [render.com](https://render.com) → **New** → **Blueprint**
-3. Connect your GitHub repo — Render will detect `render.yaml` automatically
-4. Click **Apply** — the server will be running in ~60 seconds
+3. Connect your GitHub repo. Render will detect `render.yaml` automatically
+4. Click **Apply**: the server will be running in ~60 seconds
 5. Copy the `.onrender.com` URL Render assigns to your service
 
 Then set it as your signal URL in `client/.env`:
@@ -120,7 +120,7 @@ STORMIC_SIGNAL_URL=wss://your-service-name.onrender.com
 
 > **Free tier note:** Render's free tier spins the service down after 15 minutes of inactivity. The StorMIC client handles this gracefully with exponential backoff reconnection. Upgrade to a paid instance to avoid cold starts.
 
-#### Option 2 — Heroku
+#### Option 2: Heroku
 
 A `Procfile` is included:
 
@@ -136,7 +136,7 @@ Then set your signal URL in `client/.env`:
 STORMIC_SIGNAL_URL=wss://your-app-name.herokuapp.com
 ```
 
-#### Option 3 — Any VPS or cloud server
+#### Option 3: Any VPS or cloud server
 
 ```bash
 # On your server
@@ -174,7 +174,7 @@ Then set your signal URL in `client/.env`:
 STORMIC_SIGNAL_URL=wss://signal.yourdomain.com
 ```
 
-#### Option 4 — PM2 (process manager for always-on Node.js)
+#### Option 4: PM2 (process manager for always-on Node.js)
 
 ```bash
 npm install -g pm2
@@ -231,7 +231,7 @@ No database, no authentication, no external services.
 
 ### Genel Bakış
 
-Bu, StorMIC'in WebSocket sinyal sunucusudur. Tek görevi, iki kullanıcının birbirini bulmasına ve doğrudan WebRTC bağlantısı kurabilmek için gereken bağlantı meta verilerini (SDP teklif/yanıtları ve ICE adayları) paylaşmasına yardımcı olmaktır. Kullanıcılar birbirine bağlandıktan sonra bu sunucu tamamen devre dışı kalır — ses, video, sohbet veya dosyaların hiçbiri bu sunucudan geçmez.
+Bu, StorMIC'in WebSocket sinyal sunucusudur. Tek görevi, iki kullanıcının birbirini bulmasına ve doğrudan WebRTC bağlantısı kurabilmek için gereken bağlantı meta verilerini (SDP teklif/yanıtları ve ICE adayları) paylaşmasına yardımcı olmaktır. Kullanıcılar birbirine bağlandıktan sonra bu sunucu tamamen devre dışı kalır: ses, video, sohbet veya dosyaların hiçbiri bu sunucudan geçmez.
 
 **Mesaj depolama yok. Kullanıcı hesabı yok. Hiçbir kalıcı veri tutulmaz.**  
 Tüm durum bellekte tutulur. Kanaldan son üye ayrıldığında kanal silinir.
@@ -321,14 +321,14 @@ PORT=8080 npm start
 
 ### Kendi Sunucunu Kurma
 
-#### Seçenek 1 — Render.com (önerilen, ücretsiz katman mevcut)
+#### Seçenek 1: Render.com (önerilen, ücretsiz katman mevcut)
 
 Otomatik deployment için `render.yaml` dahildir:
 
 1. Bu repoyu GitHub'a fork'la veya push'la
 2. [render.com](https://render.com) → **New** → **Blueprint** adımına git
-3. GitHub reponla bağlan — Render `render.yaml`'ı otomatik algılar
-4. **Apply**'a tıkla — sunucu ~60 saniyede çalışır hale gelir
+3. GitHub reponla bağlan. Render `render.yaml`'ı otomatik algılar
+4. **Apply**'a tıkla. Sunucu ~60 saniyede çalışır hale gelir
 5. Render'ın servisine atadığı `.onrender.com` URL'sini kopyala
 
 Ardından `client/.env` dosyasına ekle:
@@ -339,7 +339,7 @@ STORMIC_SIGNAL_URL=wss://servis-adin.onrender.com
 
 > **Ücretsiz katman notu:** Render'ın ücretsiz katmanı 15 dakika hareketsizlik sonrasında servisi kapatır. StorMIC istemcisi bunu üstel geri çekilmeli yeniden bağlanma ile sorunsuz yönetir. Soğuk başlatmayı önlemek için ücretli katmana geç.
 
-#### Seçenek 2 — Heroku
+#### Seçenek 2: Heroku
 
 `Procfile` dahildir:
 
@@ -354,7 +354,7 @@ Ardından `client/.env` dosyasına ekle:
 STORMIC_SIGNAL_URL=wss://uygulama-adin.herokuapp.com
 ```
 
-#### Seçenek 3 — Herhangi bir VPS veya bulut sunucusu
+#### Seçenek 3: Herhangi bir VPS veya bulut sunucusu
 
 ```bash
 # Sunucunda
@@ -392,7 +392,7 @@ Ardından `client/.env` dosyasına ekle:
 STORMIC_SIGNAL_URL=wss://signal.alanadiniz.com
 ```
 
-#### Seçenek 4 — PM2 (her zaman açık Node.js için process manager)
+#### Seçenek 4: PM2 (her zaman açık Node.js için process manager)
 
 ```bash
 npm install -g pm2
